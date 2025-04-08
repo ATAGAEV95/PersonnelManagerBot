@@ -10,5 +10,20 @@ main = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Поиск')],
                            resize_keyboard=True)
 
 
+def get_edit_keyboard(person_id: int):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Изменить', callback_data=f'edit_person_{person_id}'))
+    keyboard.add(InlineKeyboardButton(text='Выйти', callback_data='Сбросить все'))
+    return keyboard.as_markup()
 
 
+def get_edit_fields_keyboard(person_id: int):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Изменить ФИО', callback_data='edit_fio'))
+    keyboard.add(InlineKeyboardButton(text='Изменить дату рождения', callback_data='edit_birth_date'))
+    keyboard.add(InlineKeyboardButton(text='Изменить дату смерти', callback_data='edit_death_date'))
+    keyboard.add(InlineKeyboardButton(text='Изменить пол', callback_data='edit_gender'))
+    keyboard.add(InlineKeyboardButton(text='Изменить биографию', callback_data='edit_bio'))
+    keyboard.add(InlineKeyboardButton(text='Изменить фото', callback_data='edit_photo'))
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data=f'back_edit_person_{person_id}'))
+    return keyboard.adjust(1).as_markup()

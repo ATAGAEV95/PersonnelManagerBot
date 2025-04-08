@@ -1,3 +1,8 @@
+from app.models import async_session, Persons
+import app.keyboards as kb
+from aiogram.types import Message
+
+
 def valid_fio(fio: str):
     if not isinstance(fio, str):
         raise TypeError('ФИО должна быть строкой')
@@ -14,3 +19,26 @@ def valid_fio(fio: str):
             raise TypeError('ФИО должна содержать только буквы')
         if any(c.lower() not in russian_letters for c in part):
             raise TypeError('Разрешены только русские буквы')
+
+
+async def get_person_info(person_id: int):
+    async with async_session() as session:
+        person = await session.get(Persons, person_id)
+        if person:
+            full_info = f"ID: {person.person_id}\n" \
+                        f"Имя: {person.first_name}\n" \
+                        f"Фамилия: {person.last_name}\n" \
+                        f"Отчество: {person.father_name}\n" \
+                        f"Дата рождения: {person.birth_date}\n" \
+                        f"Дата смерти: {person.death_date}\n" \
+                        f"Пол: {person.gender}\n" \
+                        f"Биография: {person.bio}\n" \
+                        f"Фото: {person.photo_url}\n"
+            return full_info
+        else:
+            return "Персона не найдена"
+
+async def send_person_info(message: Message, person_id: int):
+    full_info = await get_person_info(person_id)
+    keyboard = kb.get_edit_keyboard(person_id)
+    await message.answer(full_info, reply_markup=keyboard)

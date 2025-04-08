@@ -7,7 +7,7 @@ from datetime import datetime
 from aiogram.exceptions import TelegramBadRequest
 
 from app.models import Persons, async_session, Relationship, Marriage
-from app.utils import valid_fio
+from app.utils import valid_fio, get_person_info, send_person_info
 import app.keyboards as kb
 import app.requests as req
 
@@ -27,6 +27,13 @@ class Form(StatesGroup):
     wife = State()
     marr_date = State()
     marr_end = State()
+    edit = State()
+    edit_fio = State()
+    edit_birth_date = State()
+    edit_death_date = State()
+    edit_gender = State()
+    edit_bio = State()
+    edit_photo = State()
 
 
 @router.message(CommandStart())
@@ -38,6 +45,13 @@ async def cmd_start(message: Message):
 async def reset_all(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Все действия отменены.")
+
+
+@router.callback_query(F.data == 'Сбросить все')
+async def reset_all_callback(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.answer("Все действия отменены.")
+    await callback.answer()
 
 
 @router.message(F.text == 'Вставить данные')
@@ -133,7 +147,6 @@ async def process_fullname(message: Message, state: FSMContext):
     if not persons:
         await message.answer("Ничего не найдено .")
         return
-    response = []
     for p in persons:
         full_info = f"ID: {p.person_id}\n" \
                     f"Имя: {p.first_name}\n" \
@@ -144,9 +157,56 @@ async def process_fullname(message: Message, state: FSMContext):
                     f"Пол: {p.gender}\n" \
                     f"Биография: {p.bio}\n" \
                     f"Фото: {p.photo_url}\n"
-        response.append(full_info)
-    await message.answer("\n".join(response))
-    await state.clear()
+        keyboard = kb.get_edit_keyboard(p.person_id)
+        await message.answer(full_info, reply_markup=keyboard)
+        await state.update_data(full_info=full_info)
+
+
+@router.callback_query(Form.search, F.data.startswith('edit_person_'))
+async def edit_person(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[2])
+    data = await state.get_data()
+    full_info = data['full_info']
+    await state.update_data(person_id=person_id)
+    await callback.message.edit_text(full_info, reply_markup=kb.get_edit_fields_keyboard(person_id))
+
+
+@router.callback_query(Form.search, F.data.startswith('back_edit_person_'))
+async def back_to_edit(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[3])
+    data = await state.get_data()
+    full_info = data['full_info']
+    await callback.message.edit_text(full_info, reply_markup=kb.get_edit_keyboard(person_id))
+
+
+@router.callback_query(Form.search, F.data == 'edit_fio')
+async def edit_fio(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    person_id = int(data['person_id'])
+    await state.update_data(person_id=person_id)
+    await callback.message.answer("Введите новое ФИО (Фамилия Имя Отчество)")
+    await state.set_state(Form.edit_fio)
+    await callback.answer()
+
+
+@router.message(Form.edit_fio)
+async def process_edit_fio(message: Message, state: FSMContext):
+    data = await state.get_data()
+    person_id = data['person_id']
+    try:
+        valid_fio(message.text)
+        async with async_session() as session:
+            person = await session.get(Persons, person_id)
+            fio_parts = message.text.split()
+            person.last_name = fio_parts[0]
+            person.first_name = fio_parts[1]
+            person.father_name = fio_parts[2]
+            await session.commit()
+        await message.answer("ФИО успешно обновлено!")
+        await send_person_info(message, person_id)
+        await state.set_state(Form.search)
+    except TypeError as e:
+        await message.answer(str(e))
 
 
 @router.message(F.text == 'Создать связи родитель - ребенок')
