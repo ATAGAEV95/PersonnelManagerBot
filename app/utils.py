@@ -1,16 +1,17 @@
 from app.models import async_session, Persons
 import app.keyboards as kb
 from aiogram.types import Message
+from aiogram import F, Router
+
+router = Router()
 
 
 def valid_fio(fio: str):
     if not isinstance(fio, str):
         raise TypeError('ФИО должна быть строкой')
-
     parts = fio.split()
     if len(parts) != 3:
         raise TypeError('ФИО должна содержать 3 компонента')
-
     russian_letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
     for part in parts:
         if len(part) < 2:
@@ -42,3 +43,8 @@ async def send_person_info(message: Message, person_id: int):
     full_info = await get_person_info(person_id)
     keyboard = kb.get_edit_keyboard(person_id)
     await message.answer(full_info, reply_markup=keyboard)
+
+
+@router.message()
+async def flood(message: Message):
+    await message.answer("Выберите в меню что именно хотите сделать")
