@@ -4,8 +4,8 @@ from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, CheckCon
 
 from config import DATABASE_URL
 
-engine = create_async_engine(url=DATABASE_URL)
 
+engine = create_async_engine(url=DATABASE_URL)
 async_session = async_sessionmaker(engine)
 
 

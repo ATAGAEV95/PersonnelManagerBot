@@ -12,7 +12,7 @@ import config as cfg
 from app.models import Persons, async_session
 import app.keyboards as kb
 import app.requests as req
-from app.utils import valid_fio, send_person_info
+from app.utils import valid_fio, send_person_info, edit_text_person_info
 
 
 router = Router()
@@ -59,21 +59,23 @@ async def process_fullname(message: Message, state: FSMContext):
 
 @router.callback_query(Form.search, F.data.startswith('edit_person_'))
 async def edit_person(callback: CallbackQuery, state: FSMContext):
-    person_id = int(callback.data.split('_')[2])
-    data = await state.get_data()
-    full_info = data['full_info']
-    await callback.message.edit_text(full_info, reply_markup=kb.get_edit_fields_keyboard(person_id))
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
+    await edit_text_person_info(callback.message, person_id, kb.get_edit_fields_keyboard)
 
 
 @router.callback_query(Form.search, F.data.startswith('back_edit_person_'))
 async def back_to_edit(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    full_info, person_id = data['full_info'], data['person_id']
-    await callback.message.edit_text(full_info, reply_markup=kb.get_edit_keyboard(person_id))
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
+    await edit_text_person_info(callback.message, person_id, kb.get_edit_keyboard)
 
 
-@router.callback_query(Form.search, F.data == 'edit_fio')
+
+@router.callback_query(Form.search, F.data.startswith('edit_fio_'))
 async def edit_fio(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
     await callback.message.answer("Введите новое ФИО")
     await state.set_state(Form.edit_fio)
     await callback.answer()
@@ -99,8 +101,10 @@ async def process_edit_fio(message: Message, state: FSMContext):
         await message.answer(str(e))
 
 
-@router.callback_query(Form.search, F.data == 'edit_birth_date')
+@router.callback_query(Form.search, F.data.startswith('edit_birth_date_'))
 async def edit_birth_date(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
     await callback.message.answer("Введите новую дату рождения в формате ДД.ММ.ГГГГ")
     await state.set_state(Form.edit_birth_date)
     await callback.answer()
@@ -123,8 +127,10 @@ async def process_edit_birth_date(message: Message, state: FSMContext):
         await message.answer("Неверный формат даты. Используйте ДД.ММ.ГГГГ")
 
 
-@router.callback_query(Form.search, F.data == 'edit_death_date')
+@router.callback_query(Form.search, F.data.startswith('edit_death_date_'))
 async def edit_death_date(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
     await callback.message.answer("Введите новую дату смерти в формате ДД.ММ.ГГГГ или 'нет'")
     await state.set_state(Form.edit_death_date)
     await callback.answer()
@@ -151,8 +157,10 @@ async def process_edit_death_date(message: Message, state: FSMContext):
     await state.set_state(Form.search)
 
 
-@router.callback_query(Form.search, F.data == 'edit_gender')
+@router.callback_query(Form.search, F.data.startswith('edit_gender_'))
 async def edit_gender(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
     await callback.message.answer("Напишите пол ('Мужской' или 'Женский')")
     await state.set_state(Form.edit_gender)
     await callback.answer()
@@ -175,8 +183,10 @@ async def process_edit_gender(message: Message, state: FSMContext):
     await state.set_state(Form.search)
 
 
-@router.callback_query(Form.search, F.data == 'edit_bio')
+@router.callback_query(Form.search, F.data.startswith('edit_bio_'))
 async def edit_bio(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
     await callback.message.answer("Напишите биографию")
     await state.set_state(Form.edit_bio)
     await callback.answer()
@@ -196,8 +206,10 @@ async def process_edit_bio(message: Message, state: FSMContext):
     await state.set_state(Form.search)
 
 
-@router.callback_query(Form.search, F.data == 'edit_photo')
+@router.callback_query(Form.search, F.data.startswith('edit_photo_'))
 async def edit_photo(callback: CallbackQuery, state: FSMContext):
+    person_id = int(callback.data.split('_')[-1])
+    await state.update_data(person_id=person_id)
     await callback.message.answer("Отправьте новое фото для персонажа")
     await state.set_state(Form.edit_photo)
     await callback.answer()
@@ -217,8 +229,9 @@ async def process_edit_photo(message: Message, state: FSMContext, bot: Bot):
             person = await session.get(Persons, person_id)
             first_name_lat = translit(person.first_name, 'ru', reversed=True).lower().replace("'", "")
             last_name_lat = translit(person.last_name, 'ru', reversed=True).lower().replace("'", "")
+            father_name_lat = translit(person.father_name, 'ru', reversed=True).lower().replace("'", "")
 
-            filename = f"{first_name_lat}_{last_name_lat}.jpg"
+            filename = f"{first_name_lat}_{last_name_lat}_{father_name_lat}.jpg"
             local_path = f"temp_{filename}"
 
             photo = message.photo[-1]

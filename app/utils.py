@@ -3,6 +3,7 @@ import app.keyboards as kb
 from aiogram.types import Message
 from aiogram import F, Router
 
+
 router = Router()
 
 
@@ -12,12 +13,10 @@ def valid_fio(fio: str):
     parts = fio.split()
     if len(parts) != 3:
         raise TypeError('ФИО должна содержать 3 компонента')
-    russian_letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+    russian_letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя-_'
     for part in parts:
         if len(part) < 2:
             raise TypeError('Каждый компонент ФИО должен быть длиннее 1 символа')
-        if not part.isalpha():
-            raise TypeError('ФИО должна содержать только буквы')
         if any(c.lower() not in russian_letters for c in part):
             raise TypeError('Разрешены только русские буквы')
 
@@ -43,6 +42,11 @@ async def send_person_info(message: Message, person_id: int):
     full_info = await get_person_info(person_id)
     keyboard = kb.get_edit_keyboard(person_id)
     await message.answer(full_info, reply_markup=keyboard)
+
+
+async def edit_text_person_info(msg, person_id: int, keyboard_func):
+    full_info = await get_person_info(person_id)
+    await msg.edit_text(full_info, reply_markup=keyboard_func(person_id))
 
 
 @router.message()
