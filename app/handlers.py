@@ -7,7 +7,6 @@ from aiogram.fsm.state import State, StatesGroup
 import app.keyboards as kb
 import app.utils as ut
 import app.requests as req
-from app.utils import router as utils_router
 from app.handlers_persons import router as insert_router
 from app.handlers_relationships import router as relationships_router
 from app.handlers_marriages import router as marriages_router
@@ -21,7 +20,7 @@ router.include_router(relationships_router)
 router.include_router(marriages_router)
 router.include_router(search_router)
 router.include_router(delete_router)
-router.include_router(utils_router)
+router.include_router(ut.router)
 
 
 ACCESS_PASSWORD = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'

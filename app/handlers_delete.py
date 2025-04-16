@@ -5,7 +5,9 @@ from aiogram.fsm.state import State, StatesGroup
 import app.keyboards as kb
 import app.requests as req
 
+
 router = Router()
+
 
 class DeleteStates(StatesGroup):
     waiting_for_person_id = State()
@@ -14,9 +16,11 @@ class DeleteStates(StatesGroup):
     waiting_for_parent_id = State()
     waiting_for_child_id = State()
 
+
 @router.message(F.text == "Удалить...")
 async def process_delete_menu(message: Message):
     await message.answer("Выберите, что хотите удалить:", reply_markup=kb.delete_menu)
+
 
 @router.callback_query(F.data == "delete_person")
 async def delete_person_request(callback: CallbackQuery, state: FSMContext):
@@ -24,17 +28,20 @@ async def delete_person_request(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DeleteStates.waiting_for_person_id)
     await callback.message.answer("Введите ID персонажа для удаления:")
 
+
 @router.callback_query(F.data == "delete_couple")
 async def delete_couple_request(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     await state.set_state(DeleteStates.waiting_for_husband_id)
     await callback.message.answer("Введите ID мужа для удаления связи муж-жена:")
 
+
 @router.callback_query(F.data == "delete_relation")
 async def delete_relation_request(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     await state.set_state(DeleteStates.waiting_for_parent_id)
     await callback.message.answer("Введите ID родителя для удаления связи родитель-ребенок:")
+
 
 @router.message(DeleteStates.waiting_for_person_id)
 async def process_person_id(message: Message, state: FSMContext):
@@ -48,6 +55,7 @@ async def process_person_id(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("Пожалуйста, введите корректный числовой ID.")
 
+
 @router.message(DeleteStates.waiting_for_husband_id)
 async def process_husband_id(message: Message, state: FSMContext):
     try:
@@ -57,6 +65,7 @@ async def process_husband_id(message: Message, state: FSMContext):
         await message.answer("Введите ID жены для удаления связи муж-жена:")
     except ValueError:
         await message.answer("Пожалуйста, введите корректный числовой ID для мужа.")
+
 
 @router.message(DeleteStates.waiting_for_wife_id)
 async def process_wife_id(message: Message, state: FSMContext):
@@ -76,6 +85,7 @@ async def process_wife_id(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("Пожалуйста, введите корректный числовой ID для жены.")
 
+
 @router.message(DeleteStates.waiting_for_parent_id)
 async def process_parent_id(message: Message, state: FSMContext):
     try:
@@ -85,6 +95,7 @@ async def process_parent_id(message: Message, state: FSMContext):
         await message.answer("Введите ID ребенка для удаления связи родитель-ребенок:")
     except ValueError:
         await message.answer("Пожалуйста, введите корректный числовой ID для родителя.")
+
 
 @router.message(DeleteStates.waiting_for_child_id)
 async def process_child_id(message: Message, state: FSMContext):
@@ -116,6 +127,7 @@ async def confirm_delete_person(callback: CallbackQuery):
     else:
         await callback.message.answer('Некорректные данные для удаления персонажа')
 
+
 @router.callback_query(F.data.startswith('confirm_delete_couple_'))
 async def confirm_delete_couple(callback: CallbackQuery):
     tokens = callback.data.split('_')
@@ -127,6 +139,7 @@ async def confirm_delete_couple(callback: CallbackQuery):
         await callback.answer()
     else:
         await callback.message.answer('Некорректные данные для удаления связи муж-жена')
+
 
 @router.callback_query(F.data.startswith('confirm_delete_relation_'))
 async def confirm_delete_relation(callback: CallbackQuery):

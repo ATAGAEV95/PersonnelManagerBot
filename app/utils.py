@@ -43,6 +43,7 @@ async def get_person_info(person_id: int):
         else:
             return "Персона не найдена"
 
+
 async def send_person_info(message: Message, person_id: int):
     full_info = await get_person_info(person_id)
     keyboard = kb.get_edit_keyboard(person_id)
