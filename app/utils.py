@@ -2,9 +2,14 @@ from app.models import async_session, Persons
 import app.keyboards as kb
 from aiogram.types import Message
 from aiogram import F, Router
+import hashlib
 
 
 router = Router()
+
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
 def valid_fio(fio: str):

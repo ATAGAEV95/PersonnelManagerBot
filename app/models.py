@@ -49,3 +49,9 @@ class Marriage(Base):
     wife_id = Column(Integer, ForeignKey("persons.person_id"), nullable=False)
     start_date = Column(Date)
     end_date = Column(Date)
+
+
+class Users(Base):
+    __tablename__ = "users"
+    user_id = Column(Integer, primary_key=True, autoincrement=False)
+    username = Column(String)

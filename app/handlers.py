@@ -2,13 +2,17 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 import app.keyboards as kb
+import app.utils as ut
+import app.requests as req
 from app.utils import router as utils_router
 from app.handlers_persons import router as insert_router
 from app.handlers_relationships import router as relationships_router
 from app.handlers_marriages import router as marriages_router
 from app.handlers_search import router as search_router
+from app.handlers_delete import router as delete_router
 
 
 router = Router()
@@ -16,12 +20,37 @@ router.include_router(insert_router)
 router.include_router(relationships_router)
 router.include_router(marriages_router)
 router.include_router(search_router)
+router.include_router(delete_router)
 router.include_router(utils_router)
 
 
+ACCESS_PASSWORD = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'
+
+
+class RegisterState(StatesGroup):
+    waiting_for_password = State()
+
+
 @router.message(CommandStart())
-async def cmd_start(message: Message):
-    await message.answer('Добро пожаловать!', reply_markup=kb.main)
+async def start_handler(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    user = await req.get_user_by_id(user_id)
+    if user:
+        await message.answer('Добро пожаловать! Вы уже авторизованы.', reply_markup=kb.main)
+    else:
+        await message.answer('Введите пароль для доступа:')
+        await state.set_state(RegisterState.waiting_for_password)
+
+
+@router.message(RegisterState.waiting_for_password)
+async def password_handler(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    if ut.hash_password(message.text.strip()) == ACCESS_PASSWORD:
+        await req.add_user(user_id, message.from_user.username or '')
+        await message.answer('Авторизация успешна! Теперь у вас полный доступ.', reply_markup=kb.main)
+        await state.clear()
+    else:
+        await message.answer('Неверный пароль. Попробуйте еще раз:')
 
 
 @router.message(F.text == 'Сбросить все')
