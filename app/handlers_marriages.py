@@ -19,21 +19,29 @@ class MarriageForm(StatesGroup):
 
 @router.message(F.text == 'Создать связи муж - жена')
 async def insert_marriage(message: Message, state: FSMContext):
-    await message.answer("Укажите ID мужа")
+    await message.answer(
+        "💍 Для создания связи 'муж - жена' убедитесь, что вы знаете ID обоих участников. "
+        "Вы можете узнать нужный ID, воспользовавшись командой «Поиск».\n\n"
+        "Введите ID мужа:"
+    )
     await state.set_state(MarriageForm.husband)
 
 
 @router.message(MarriageForm.husband)
 async def process_husband(message: Message, state: FSMContext):
     await state.update_data(husband=message.text)
-    await message.answer("Укажите ID жены")
+    await message.answer(
+        "💍 Введите ID жены:"
+    )
     await state.set_state(MarriageForm.wife)
 
 
 @router.message(MarriageForm.wife)
 async def process_wife(message: Message, state: FSMContext):
     await state.update_data(wife=message.text)
-    await message.answer("Укажите дату свадьбы в формате ДД.ММ.ГГГГ или 'нет'")
+    await message.answer(
+        "🗓 Укажите дату свадьбы в формате ДД.ММ.ГГГГ или введите 'нет', если дата неизвестна:"
+    )
     await state.set_state(MarriageForm.marr_date)
 
 
@@ -45,10 +53,14 @@ async def process_marr_date(message: Message, state: FSMContext):
         try:
             marr_date = datetime.strptime(message.text, "%d.%m.%Y").date()
         except ValueError:
-            await message.answer("Неверный формат. Введите дату или 'нет'")
+            await message.answer(
+                "❌ Неверный формат даты. Введите дату свадьбы в формате ДД.ММ.ГГГГ или 'нет'."
+            )
             return
     await state.update_data(marr_date=marr_date)
-    await message.answer("Укажите дату развода в формате (ДД.ММ.ГГГГ) или 'нет'")
+    await message.answer(
+        "🗓 Укажите дату развода в формате ДД.ММ.ГГГГ или введите 'нет', если связь сохраняется или дата неизвестна:"
+    )
     await state.set_state(MarriageForm.marr_end)
 
 
@@ -60,7 +72,9 @@ async def process_marr_end(message: Message, state: FSMContext):
         try:
             marr_end = datetime.strptime(text, "%d.%m.%Y").date()
         except ValueError:
-            await message.answer("Неверный формат. Введите дату или 'нет'")
+            await message.answer(
+                "❌ Неверный формат даты. Введите дату развода в формате ДД.ММ.ГГГГ или 'нет'."
+            )
             return
     data = await state.get_data()
     try:
@@ -73,8 +87,10 @@ async def process_marr_end(message: Message, state: FSMContext):
             )
             session.add(new_marriage)
             await session.commit()
-            await message.answer("Данные успешно сохранены!")
+            await message.answer("✅ Связь 'муж - жена' успешно создана!")
     except Exception as e:
-        await message.answer(f"Ошибка сохранения, возможно вы указали неверные ID: {str(e)}")
+        await message.answer(
+            f"❌ Ошибка сохранения, возможно указаны неверные ID. Проверьте данные и попробуйте еще раз.\nТехническая ошибка: {str(e)}"
+        )
     finally:
         await state.clear()

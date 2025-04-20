@@ -32,7 +32,10 @@ class Form(StatesGroup):
 
 @router.message(F.text == 'Поиск')
 async def start_search(message: Message, state: FSMContext):
-    await message.answer("Введите данные для поиска:")
+    await message.answer(
+        "🔍 Введите имя или фамилию человека, которого хотите найти.\n"
+        "Можно ввести полное имя и фамилию для точного поиска."
+    )
     await state.set_state(Form.search)
 
 
@@ -40,18 +43,20 @@ async def start_search(message: Message, state: FSMContext):
 async def process_fullname(message: Message, state: FSMContext):
     persons = await req.search_persons(message.text)
     if not persons:
-        await message.answer("Ничего не найдено .")
+        await message.answer(
+            "🙁 По вашему запросу ничего не найдено. Попробуйте изменить запрос или проверить правильность написания имени/фамилии."
+        )
         return
     for p in persons:
-        full_info = f"ID: {p.person_id}\n" \
-                    f"Имя: {p.first_name}\n" \
-                    f"Фамилия: {p.last_name}\n" \
-                    f"Отчество: {p.father_name}\n" \
-                    f"Дата рождения: {p.birth_date}\n" \
-                    f"Дата смерти: {p.death_date}\n" \
-                    f"Пол: {p.gender}\n" \
-                    f"Биография: {p.bio}\n" \
-                    f"Фото: {p.photo_url}\n"
+        full_info = (
+            f"🆔 ID: {p.person_id}\n"
+            f"👤 {p.last_name} {p.first_name} {p.father_name}\n\n"
+            f"📅 Дата рождения: {p.birth_date}\n"
+            f"📅 Дата смерти: {p.death_date if p.death_date else 'Н/Д'}\n"
+            f"👫 Пол: {p.gender}\n\n"
+            f"📋 Биография:\n{p.bio if p.bio else 'Биография отсутствует'}\n"
+            f"🖼 Фото: {p.photo_url}\n"
+        )
         keyboard = kb.get_edit_keyboard(p.person_id)
         await message.answer(full_info, reply_markup=keyboard)
         await state.update_data(full_info=full_info, person_id=p.person_id)
@@ -76,7 +81,7 @@ async def back_to_edit(callback: CallbackQuery, state: FSMContext):
 async def edit_fio(callback: CallbackQuery, state: FSMContext):
     person_id = int(callback.data.split('_')[-1])
     await state.update_data(person_id=person_id)
-    await callback.message.answer("Введите новое ФИО")
+    await callback.message.answer("✏️ Введите новое ФИО в формате: Фамилия Имя Отчество")
     await state.set_state(Form.edit_fio)
     await callback.answer()
 
@@ -94,7 +99,7 @@ async def process_edit_fio(message: Message, state: FSMContext):
             person.first_name = fio_parts[1]
             person.father_name = fio_parts[2]
             await session.commit()
-        await message.answer("ФИО успешно обновлено!")
+        await message.answer("✅ ФИО успешно обновлено!")
         await send_person_info(message, person_id)
         await state.set_state(Form.search)
     except TypeError as e:
@@ -105,7 +110,7 @@ async def process_edit_fio(message: Message, state: FSMContext):
 async def edit_birth_date(callback: CallbackQuery, state: FSMContext):
     person_id = int(callback.data.split('_')[-1])
     await state.update_data(person_id=person_id)
-    await callback.message.answer("Введите новую дату рождения в формате ДД.ММ.ГГГГ")
+    await callback.message.answer("🗓 Введите новую дату рождения в формате ДД.ММ.ГГГГ (например, 01.01.2000)")
     await state.set_state(Form.edit_birth_date)
     await callback.answer()
 
@@ -120,18 +125,22 @@ async def process_edit_birth_date(message: Message, state: FSMContext):
             person = await session.get(Persons, person_id)
             person.birth_date = birth_date
             await session.commit()
-        await message.answer("Дата рождения успешно обновлена!")
+        await message.answer("✅ Дата рождения успешно обновлена!")
         await send_person_info(message, person_id)
         await state.set_state(Form.search)
     except ValueError:
-        await message.answer("Неверный формат даты. Используйте ДД.ММ.ГГГГ")
+        await message.answer(
+            "❌ Формат даты не распознан. Пожалуйста, используйте формат ДД.ММ.ГГГГ (например, 01.01.2000)"
+        )
 
 
 @router.callback_query(Form.search, F.data.startswith('edit_death_date_'))
 async def edit_death_date(callback: CallbackQuery, state: FSMContext):
     person_id = int(callback.data.split('_')[-1])
     await state.update_data(person_id=person_id)
-    await callback.message.answer("Введите новую дату смерти в формате ДД.ММ.ГГГГ или 'нет'")
+    await callback.message.answer(
+        "🗓 Введите новую дату смерти в формате ДД.ММ.ГГГГ или напишите 'нет', если человек жив"
+    )
     await state.set_state(Form.edit_death_date)
     await callback.answer()
 
@@ -146,13 +155,15 @@ async def process_edit_death_date(message: Message, state: FSMContext):
         try:
             death_date = datetime.strptime(text, "%d.%m.%Y").date()
         except ValueError:
-            await message.answer("Неверный формат. Введите дату или 'нет'")
+            await message.answer(
+                "❌ Неверный формат. Введите дату в формате ДД.ММ.ГГГГ или напишите 'нет'"
+            )
             return
     async with async_session() as session:
         person = await session.get(Persons, person_id)
         person.death_date = death_date
         await session.commit()
-    await message.answer("Дата смерти успешно обновлена!")
+    await message.answer("✅ Дата смерти успешно обновлена!")
     await send_person_info(message, person_id)
     await state.set_state(Form.search)
 
@@ -161,7 +172,7 @@ async def process_edit_death_date(message: Message, state: FSMContext):
 async def edit_gender(callback: CallbackQuery, state: FSMContext):
     person_id = int(callback.data.split('_')[-1])
     await state.update_data(person_id=person_id)
-    await callback.message.answer("Напишите пол ('Мужской' или 'Женский')")
+    await callback.message.answer("👫 Укажите пол: Мужской или Женский")
     await state.set_state(Form.edit_gender)
     await callback.answer()
 
@@ -172,13 +183,15 @@ async def process_edit_gender(message: Message, state: FSMContext):
     person_id = data['person_id']
     gender = message.text.strip().capitalize()
     if gender not in ["Мужской", "Женский"]:
-        await message.answer("Пожалуйста, укажите пол как 'Мужской' или 'Женский'")
+        await message.answer(
+            "❌ Не могу определить пол. Пожалуйста, укажите: Мужской или Женский"
+        )
         return
     async with async_session() as session:
         person = await session.get(Persons, person_id)
         person.gender = gender
         await session.commit()
-    await message.answer("Пол успешно обновлен!")
+    await message.answer("✅ Пол успешно обновлен!")
     await send_person_info(message, person_id)
     await state.set_state(Form.search)
 
@@ -187,7 +200,7 @@ async def process_edit_gender(message: Message, state: FSMContext):
 async def edit_bio(callback: CallbackQuery, state: FSMContext):
     person_id = int(callback.data.split('_')[-1])
     await state.update_data(person_id=person_id)
-    await callback.message.answer("Напишите биографию")
+    await callback.message.answer("📝 Введите биографию или интересные факты о человеке")
     await state.set_state(Form.edit_bio)
     await callback.answer()
 
@@ -201,7 +214,7 @@ async def process_edit_bio(message: Message, state: FSMContext):
         person = await session.get(Persons, person_id)
         person.bio = bio
         await session.commit()
-    await message.answer("Биография успешно обновлена!")
+    await message.answer("✅ Биография успешно сохранена!")
     await send_person_info(message, person_id)
     await state.set_state(Form.search)
 
@@ -210,14 +223,18 @@ async def process_edit_bio(message: Message, state: FSMContext):
 async def edit_photo(callback: CallbackQuery, state: FSMContext):
     person_id = int(callback.data.split('_')[-1])
     await state.update_data(person_id=person_id)
-    await callback.message.answer("Отправьте новое фото для персонажа")
+    await callback.message.answer(
+        "📸 Отправьте фотографию человека. Лучше всего подойдет портретное фото."
+    )
     await state.set_state(Form.edit_photo)
     await callback.answer()
 
 
 @router.message(Form.edit_photo, ~F.photo)
 async def handle_wrong_photo_format(message: Message):
-    await message.answer("Это не фото. Пожалуйста, отправьте изображение")
+    await message.answer(
+        "❌ Не вижу фотографии. Пожалуйста, отправьте изображение (не файл и не документ)"
+    )
 
 
 @router.message(Form.edit_photo, F.photo)
@@ -250,7 +267,7 @@ async def process_edit_photo(message: Message, state: FSMContext, bot: Bot):
             person.photo_url = f"{cfg.BASE_URL}{filename}"
             await session.commit()
 
-            await message.answer("Фото успешно обновлено!")
+            await message.answer("✅ Фотография успешно обновлена!")
             await send_person_info(message, person_id)
 
     except Exception as e:

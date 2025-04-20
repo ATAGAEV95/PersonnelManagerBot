@@ -17,21 +17,27 @@ class RelationForm(StatesGroup):
 
 @router.message(F.text == 'Создать связи родитель - ребенок')
 async def insert_parent(message: Message, state: FSMContext):
-    await message.answer("Укажите ID родителя")
+    await message.answer(
+        "👪 Для создания связи 'родитель - ребенок' убедитесь, что вы знаете нужные ID. "
+        "Если ID неизвестны, воспользуйтесь командой «Поиск» для получения информации.\n\n"
+        "Введите ID родителя:"
+    )
     await state.set_state(RelationForm.parent)
 
 
 @router.message(RelationForm.parent)
 async def process_parent(message: Message, state: FSMContext):
     await state.update_data(parent=message.text)
-    await message.answer("Укажите ID ребенка")
+    await message.answer("👪 Введите ID ребенка:")
     await state.set_state(RelationForm.child)
 
 
 @router.message(RelationForm.child)
 async def process_child(message: Message, state: FSMContext):
     await state.update_data(child=message.text)
-    await message.answer("Укажите степень родства, напишите - 'Родной', 'Приемный', 'Отчим', 'Мачеха'")
+    await message.answer(
+        "📝 Укажите степень родства. Введите один из вариантов: 'Родной', 'Приемный', 'Отчим', 'Мачеха'"
+    )
     await state.set_state(RelationForm.rel_type)
 
 
@@ -39,7 +45,7 @@ async def process_child(message: Message, state: FSMContext):
 async def process_type(message: Message, state: FSMContext):
     rel_type = message.text.strip().capitalize()
     if rel_type not in ['Родной', 'Приемный', 'Отчим', 'Мачеха']:
-        await message.answer("Пожалуйста, напишите - 'Родной', 'Приемный', 'Отчим', 'Мачеха'")
+        await message.answer("❌ Пожалуйста, введите корректный тип родства: 'Родной', 'Приемный', 'Отчим', 'Мачеха'")
         return
     data = await state.get_data()
     try:
@@ -51,8 +57,10 @@ async def process_type(message: Message, state: FSMContext):
             )
             session.add(new_relationship)
             await session.commit()
-            await message.answer("Данные успешно сохранены!")
+            await message.answer("✅ Связь 'родитель - ребенок' успешно создана!")
     except Exception as e:
-        await message.answer(f"Ошибка сохранения, возможно вы указали неверные ID: {str(e)}")
+        await message.answer(
+            f"❌ Ошибка сохранения, возможно указаны неверные ID. Проверьте данные и попробуйте ещё раз.\nТехническая ошибка: {str(e)}"
+        )
     finally:
         await state.clear()

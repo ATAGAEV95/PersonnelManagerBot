@@ -30,15 +30,15 @@ async def get_person_info(person_id: int):
     async with async_session() as session:
         person = await session.get(Persons, person_id)
         if person:
-            full_info = f"ID: {person.person_id}\n" \
-                        f"Имя: {person.first_name}\n" \
-                        f"Фамилия: {person.last_name}\n" \
-                        f"Отчество: {person.father_name}\n" \
-                        f"Дата рождения: {person.birth_date}\n" \
-                        f"Дата смерти: {person.death_date}\n" \
-                        f"Пол: {person.gender}\n" \
-                        f"Биография: {person.bio}\n" \
-                        f"Фото: {person.photo_url}\n"
+            full_info = (
+                f"🆔 ID: {person.person_id}\n"
+                f"👤 {person.last_name} {person.first_name} {person.father_name}\n\n"
+                f"📅 Дата рождения: {person.birth_date}\n"
+                f"📅 Дата смерти: {person.death_date if person.death_date else 'Н/Д'}\n"
+                f"👫 Пол: {person.gender}\n\n"
+                f"📋 Биография:\n{person.bio if person.bio else 'Биография отсутствует'}\n"
+                f"🖼 Фото: {person.photo_url}\n"
+            )
             return full_info
         else:
             return "Персона не найдена"

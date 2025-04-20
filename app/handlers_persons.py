@@ -19,7 +19,7 @@ class InsertForm(StatesGroup):
 
 @router.message(F.text == 'Вставить данные')
 async def insert_data(message: Message, state: FSMContext):
-    await message.answer("Напишите ФИО (Фамилия Имя Отчество)")
+    await message.answer("📝 Введите ФИО (Фамилия Имя Отчество) нового человека")
     await state.set_state(InsertForm.fio)
 
 
@@ -28,7 +28,7 @@ async def process_fio(message: Message, state: FSMContext):
     try:
         valid_fio(message.text)
         await state.update_data(fio=message.text)
-        await message.answer("Напишите пол ('Мужской' или 'Женский')")
+        await message.answer("👫 Введите пол нового человека: 'Мужской' или 'Женский'")
         await state.set_state(InsertForm.gender)
     except TypeError as e:
         await message.answer(str(e))
@@ -38,10 +38,10 @@ async def process_fio(message: Message, state: FSMContext):
 async def process_gender(message: Message, state: FSMContext):
     gender = message.text.strip().capitalize()
     if gender not in ["Мужской", "Женский"]:
-        await message.answer("Пожалуйста, укажите пол как 'Мужской' или 'Женский'")
+        await message.answer("❌ Пожалуйста, укажите пол как 'Мужской' или 'Женский'")
         return
     await state.update_data(gender=gender)
-    await message.answer("Укажите дату рождения в формате ДД.ММ.ГГГГ")
+    await message.answer("🗓 Укажите дату рождения в формате ДД.ММ.ГГГГ (например, 01.01.2000)")
     await state.set_state(InsertForm.birth_date)
 
 
@@ -50,10 +50,10 @@ async def process_birth_date(message: Message, state: FSMContext):
     try:
         birth_date = datetime.strptime(message.text, "%d.%m.%Y").date()
         await state.update_data(birth_date=birth_date)
-        await message.answer("Укажите дату смерти (ДД.ММ.ГГГГ) или 'нет'")
+        await message.answer("🗓 Укажите дату смерти в формате ДД.ММ.ГГГГ или введите 'нет', если человек жив")
         await state.set_state(InsertForm.death_date)
     except ValueError:
-        await message.answer("Неверный формат даты. Используйте ДД.ММ.ГГГГ")
+        await message.answer("❌ Неверный формат даты. Используйте формат ДД.ММ.ГГГГ (например, 01.01.2000)")
 
 
 @router.message(InsertForm.death_date)
@@ -64,10 +64,10 @@ async def process_death_date(message: Message, state: FSMContext):
         try:
             death_date = datetime.strptime(text, "%d.%m.%Y").date()
         except ValueError:
-            await message.answer("Неверный формат. Введите дату или 'нет'")
+            await message.answer("❌ Неверный формат. Введите дату в формате ДД.ММ.ГГГГ или 'нет', если человек жив")
             return
     await state.update_data(death_date=death_date)
-    await message.answer("Напишите биографию или 'нет'")
+    await message.answer("📝 Введите краткую биографию или интересные факты о человеке. Если информации нет, введите 'нет'")
     await state.set_state(InsertForm.bio)
 
 
@@ -91,8 +91,8 @@ async def process_bio(message: Message, state: FSMContext):
             )
             session.add(new_person)
             await session.commit()
-            await message.answer("Данные успешно сохранены!")
+            await message.answer("✅ Данные нового человека успешно сохранены!")
     except Exception as e:
-        await message.answer(f"Ошибка сохранения: {str(e)}")
+        await message.answer(f"❌ Ошибка сохранения: {str(e)}")
     finally:
         await state.clear()

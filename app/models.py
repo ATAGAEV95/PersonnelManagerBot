@@ -5,7 +5,19 @@ from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, CheckCon
 from config import DATABASE_URL
 
 
-engine = create_async_engine(url=DATABASE_URL)
+schema = 'public'
+
+
+def get_engine(schema: str):
+    return create_async_engine(
+        DATABASE_URL,
+        connect_args={"server_settings": {"search_path": schema}})
+
+
+if schema == None:
+    engine = get_engine('test')
+else:
+    engine = get_engine(schema)
 async_session = async_sessionmaker(engine)
 
 
@@ -55,3 +67,9 @@ class Users(Base):
     __tablename__ = "users"
     user_id = Column(Integer, primary_key=True, autoincrement=False)
     username = Column(String)
+
+
+async def init_models():
+    """Создает таблицы в базе данных, если они не существуют"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
