@@ -18,7 +18,7 @@ def valid_fio(fio: str):
     parts = fio.split()
     if len(parts) != 3:
         raise TypeError('ФИО должна содержать 3 компонента')
-    russian_letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя-_'
+    russian_letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя-_()'
     for part in parts:
         if len(part) < 2:
             raise TypeError('Каждый компонент ФИО должен быть длиннее 1 символа')
