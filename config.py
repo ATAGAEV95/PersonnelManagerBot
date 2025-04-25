@@ -27,6 +27,10 @@
 
 # Удалить код ниже если вы не используете CI/CD
 import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 TG_TOKEN = os.getenv("TG_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
