@@ -60,8 +60,8 @@ class Marriage(Base):
     end_date = Column(Date)
 
 
-class Users(Base):
-    __tablename__ = "users"
+class Admins(Base):
+    __tablename__ = "admins"
     user_id = Column(Integer, primary_key=True, autoincrement=False)
     username = Column(String)
 

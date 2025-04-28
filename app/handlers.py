@@ -23,7 +23,7 @@ router.include_router(delete_router)
 router.include_router(ut.router)
 
 
-ACCESS_PASSWORD = 'e5ae93bd8095fbd86c25a110bbf194a5a1a209f1e8eb31bb30c8b0ecbe254d58'
+ACCESS_PASSWORD = '0faa9a90329b394b538e3133ac3844af83237a93989e4b9168ac93ff9dd616d1'
 
 
 class RegisterState(StatesGroup):
