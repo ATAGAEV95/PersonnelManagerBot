@@ -1,5 +1,5 @@
 from sqlalchemy import select, and_, or_
-from app.models import async_session, Persons, Relationship, Marriage, Users
+from app.models import async_session, Persons, Relationship, Marriage, Admins
 
 
 async def search_persons(search_str: str):
@@ -89,7 +89,7 @@ async def delete_relationship(parent_id: int, child_id: int) -> (bool, str):
 async def get_user_by_id(user_id: int):
     try:
         async with async_session() as session:
-            query = select(Users).where(Users.user_id == user_id)
+            query = select(Admins).where(Admins.user_id == user_id)
             result = await session.execute(query)
             return result.scalar_one_or_none()
     except Exception as e:
@@ -100,7 +100,7 @@ async def get_user_by_id(user_id: int):
 async def add_user(user_id: int, username: str):
     try:
         async with async_session() as session:
-            user = Users(user_id=user_id, username=username)
+            user = Admins(user_id=user_id, username=username)
             session.add(user)
             await session.commit()
     except Exception as e:
