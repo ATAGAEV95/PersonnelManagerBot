@@ -1,7 +1,8 @@
 import hashlib
+from typing import Callable
 
 from aiogram import Router
-from aiogram.types import Message
+from aiogram.types import InlineKeyboardMarkup, Message
 
 import app.keyboards as kb
 from app.models import Persons, async_session
@@ -52,17 +53,36 @@ async def get_person_info(person_id: int) -> str:
             return "Персона не найдена"
 
 
-async def send_person_info(message: Message, person_id: int):
+async def send_person_info(message: Message, person_id: int) -> None:
+    """Отправляет информацию о человеке в виде сообщения.
+
+    Функция получает данные о человеке по ID, формирует сообщение
+    с полной информацией и добавляет клавиатуру для редактирования.
+    """
     full_info = await get_person_info(person_id)
     keyboard = kb.get_edit_keyboard(person_id)
     await message.answer(full_info, reply_markup=keyboard)
 
 
-async def edit_text_person_info(msg, person_id: int, keyboard_func):
+KeyboardFunc = Callable[[int], InlineKeyboardMarkup]
+
+async def edit_text_person_info(message: Message, person_id: int, keyboard_func: KeyboardFunc) -> None:
+    """Редактирует сообщение с информацией о человеке и обновляет клавиатуру.
+
+    Функция получает данные о человеке по ID, обновляет текст существующего
+    сообщения и прикрепляет новую клавиатуру. Используется для навигации между
+    клавиатурами get_edit_keyboard и get_edit_fields_keyboard при редактировании
+    информации о человеке.
+    """
     full_info = await get_person_info(person_id)
-    await msg.edit_text(full_info, reply_markup=keyboard_func(person_id))
+    await message.edit_text(full_info, reply_markup=keyboard_func(person_id))
 
 
 @router.message()
-async def flood(message: Message):
+async def flood(message: Message) -> None:
+    """Функция перехватывает все сообщения.
+
+    Если сообщения не имеют отношения к функционалу бота,
+    то они получать текст об этом.
+    """
     await message.answer("Выберите в меню что именно хотите сделать")
