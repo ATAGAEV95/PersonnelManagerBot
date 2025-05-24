@@ -12,22 +12,22 @@ router = Router()
 
 def hash_password(password: str) -> str:
     """Хэширует пароль с использованием SHA-256."""
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 
 def valid_fio(fio: str) -> None:
     """Проверяет корректность введенного ФИО (Фамилия Имя Отчество)."""
     if not isinstance(fio, str):
-        raise TypeError('ФИО должна быть строкой')
+        raise TypeError("ФИО должна быть строкой")
     parts = fio.split()
     if len(parts) != 3:
-        raise TypeError('ФИО должна содержать 3 компонента')
-    russian_letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя-_()'
+        raise TypeError("ФИО должна содержать 3 компонента")
+    russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя-_()"
     for part in parts:
         if len(part) < 2:
-            raise TypeError('Каждый компонент ФИО должен быть длиннее 1 символа')
+            raise TypeError("Каждый компонент ФИО должен быть длиннее 1 символа")
         if any(c.lower() not in russian_letters for c in part):
-            raise TypeError('Разрешены только русские буквы')
+            raise TypeError("Разрешены только русские буквы")
 
 
 async def get_person_info(person_id: int) -> str:
@@ -66,7 +66,8 @@ async def send_person_info(message: Message, person_id: int) -> None:
 
 KeyboardFunc = Callable[[int], InlineKeyboardMarkup]
 
-async def edit_text_person_info(message: Message, person_id: int, keyboard_func: KeyboardFunc) -> None:
+
+async def edit_text_person_info(msg: Message, person_id: int, keyboard_func: KeyboardFunc) -> None:
     """Редактирует сообщение с информацией о человеке и обновляет клавиатуру.
 
     Функция получает данные о человеке по ID, обновляет текст существующего
@@ -75,7 +76,7 @@ async def edit_text_person_info(message: Message, person_id: int, keyboard_func:
     информации о человеке.
     """
     full_info = await get_person_info(person_id)
-    await message.edit_text(full_info, reply_markup=keyboard_func(person_id))
+    await msg.edit_text(full_info, reply_markup=keyboard_func(person_id))
 
 
 @router.message()
