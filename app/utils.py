@@ -1,18 +1,21 @@
-from app.models import async_session, Persons
-import app.keyboards as kb
-from aiogram.types import Message
-from aiogram import F, Router
 import hashlib
 
+from aiogram import Router
+from aiogram.types import Message
+
+import app.keyboards as kb
+from app.models import Persons, async_session
 
 router = Router()
 
 
 def hash_password(password: str) -> str:
+    """Хэширует пароль с использованием SHA-256."""
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
-def valid_fio(fio: str):
+def valid_fio(fio: str) -> None:
+    """Проверяет корректность введенного ФИО (Фамилия Имя Отчество)."""
     if not isinstance(fio, str):
         raise TypeError('ФИО должна быть строкой')
     parts = fio.split()
@@ -26,7 +29,12 @@ def valid_fio(fio: str):
             raise TypeError('Разрешены только русские буквы')
 
 
-async def get_person_info(person_id: int):
+async def get_person_info(person_id: int) -> str:
+    """Получает информацию о человеке по его ID.
+
+    Данная функция нужна чтобы возвращало информацию о человеке,
+    несмотря на нажатия кнопок клавиатуры из keyboards.
+    """
     async with async_session() as session:
         person = await session.get(Persons, person_id)
         if person:
