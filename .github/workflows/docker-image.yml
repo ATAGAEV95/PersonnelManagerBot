@@ -30,7 +30,7 @@ jobs:
       - name: Test Python script
         run: |
           echo "Running Python script test..."
-          python -c "import your_module; print('Import successful')"
+          python main.py
           echo "Python script test completed successfully"
 
       # Шаг 5: Сборка Docker-образа
