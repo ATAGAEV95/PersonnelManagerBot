@@ -33,6 +33,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TG_TOKEN = os.getenv("TG_TOKEN")
+TG_TOKEN_TEST = os.getenv("TG_TOKEN_TEST")
 DATABASE_URL = os.getenv("DATABASE_URL")
 SCHEMA = "public"
 SSH_HOST = os.getenv("SSH_HOST")

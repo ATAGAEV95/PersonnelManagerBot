@@ -42,7 +42,7 @@ jobs:
           echo "Starting Python script..."
           
           # Запустить с таймаутом (если скрипт работает постоянно)
-          timeout 15 python main.py 2>&1
+          timeout 15 python main_test.py 2>&1
           
           # Сохраняем код возврата
           EXIT_CODE=$?
