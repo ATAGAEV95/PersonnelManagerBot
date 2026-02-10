@@ -48,12 +48,20 @@ jobs:
           # Сохраняем код возврата
           EXIT_CODE=$?
           
-          # Разрешаем коды 0 (успех) и 124 (таймаут)
-          if [ $EXIT_CODE -eq 0 ] || [ $EXIT_CODE -eq 124 ]; then
-            echo "Python script test completed successfully"
+          echo "Script exited with code: $EXIT_CODE"
+    
+          # 124 - таймаут (бот работал нормально)
+          # 0 - успешное завершение (бот сам завершился)
+          # другие коды - ошибка
+          
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "Bot was stopped by timeout (working normally)"
+            exit 0
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "Bot exited normally"
             exit 0
           else
-            echo "Python script failed with exit code: $EXIT_CODE"
+            echo "Bot failed with exit code: $EXIT_CODE"
             exit $EXIT_CODE
           fi
 
