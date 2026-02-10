@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12-alpine'
+          python-version: '3.12'
 
       # Шаг 3: Установка зависимостей Python
       - name: Install Python dependencies
