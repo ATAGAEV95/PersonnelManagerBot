@@ -43,27 +43,9 @@ jobs:
           echo "Starting Python script..."
           
           # Запустить с таймаутом (если скрипт работает постоянно)
-          timeout 15 python main_test.py 2>&1
-          
-          # Сохраняем код возврата
-          EXIT_CODE=$?
-          
-          echo "Script exited with code: $EXIT_CODE"
-    
-          # 124 - таймаут (бот работал нормально)
-          # 0 - успешное завершение (бот сам завершился)
-          # другие коды - ошибка
-          
-          if [ $EXIT_CODE -eq 124 ]; then
-            echo "Bot was stopped by timeout (working normally)"
-            exit 0
-          elif [ $EXIT_CODE -eq 0 ]; then
-            echo "Bot exited normally"
-            exit 0
-          else
-            echo "Bot failed with exit code: $EXIT_CODE"
-            exit $EXIT_CODE
-          fi
+          python main_test.py 2>&1
+
+          echo "Python script test completed successfully"
 
       # Шаг 5: Сборка Docker-образа
       - name: Build Docker image
