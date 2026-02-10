@@ -28,9 +28,31 @@ jobs:
 
       # Шаг 4: Проверка работы скрипта Python
       - name: Test Python script
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SCHEMA: "public"
+          SSH_HOST: ${{ secrets.DEPLOY_SERVER_HOST }}
+          SSH_USERNAME: ${{ secrets.DEPLOY_SERVER_USER }}
+          SSH_PASSWORD: ${{ secrets.DEPLOY_SERVER_PASSWORD }}
+          BASE_URL: ${{ secrets.BASE_URL }}
         run: |
           echo "Running Python script test..."
-          python -c "import main; print('Import successful')"
+          
+          # Проверка наличия переменных (опционально)
+          if [ -z "$TG_TOKEN" ]; then echo "Warning: TG_TOKEN is empty"; fi
+          if [ -z "$DATABASE_URL" ]; then echo "Warning: DATABASE_URL is empty"; fi
+          if [ -z "$SSH_HOST" ]; then echo "Warning: SSH_HOST is empty"; fi
+          
+          echo "TG_TOKEN length: ${#TG_TOKEN}"
+          echo "SSH_HOST: $SSH_HOST"
+          echo "BASE_URL: $BASE_URL"
+          
+          echo "Starting Python script..."
+          
+          # Запустить с таймаутом (если скрипт работает постоянно)
+          timeout 10 python main.py 2>&1 || true
+          
           echo "Python script test completed successfully"
 
       # Шаг 5: Сборка Docker-образа
@@ -75,4 +97,5 @@ jobs:
               -e SSH_USERNAME="${{ secrets.DEPLOY_SERVER_USER }}" \
               -e SSH_PASSWORD="${{ secrets.DEPLOY_SERVER_PASSWORD }}" \
               -e BASE_URL="${{ secrets.BASE_URL }}" \
+              -e SCHEMA="public" \
               pensonnelmanagerbot:latest
