@@ -29,7 +29,8 @@ jobs:
       # Шаг 4: Проверка работы скрипта Python
       - name: Test Python script
         env:
-          TG_TOKEN: ${{ secrets.TG_TOKEN_TEST }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_TOKEN_TEST: ${{ secrets.TG_TOKEN_TEST }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SCHEMA: "public"
           SSH_HOST: ${{ secrets.DEPLOY_SERVER_HOST }}
