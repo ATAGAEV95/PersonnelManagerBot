@@ -39,19 +39,10 @@ jobs:
         run: |
           echo "Running Python script test..."
           
-          # Проверка наличия переменных (опционально)
-          if [ -z "$TG_TOKEN" ]; then echo "Warning: TG_TOKEN is empty"; fi
-          if [ -z "$DATABASE_URL" ]; then echo "Warning: DATABASE_URL is empty"; fi
-          if [ -z "$SSH_HOST" ]; then echo "Warning: SSH_HOST is empty"; fi
-          
-          echo "TG_TOKEN length: ${#TG_TOKEN}"
-          echo "SSH_HOST: $SSH_HOST"
-          echo "BASE_URL: $BASE_URL"
-          
           echo "Starting Python script..."
           
           # Запустить с таймаутом (если скрипт работает постоянно)
-          timeout 10 python main.py 2>&1 || true
+          timeout 10 python main.py 2>&1
           
           echo "Python script test completed successfully"
 
