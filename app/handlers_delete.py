@@ -127,7 +127,7 @@ async def confirm_delete_person(callback: CallbackQuery):
     tokens = callback.data.split('_')
     if len(tokens) >= 4:
         person_id = int(tokens[-1])
-        success, msg = await req.delete_person(person_id)
+        msg = await req.delete_person(person_id)
         await callback.message.answer(msg)
         await callback.answer()
     else:
@@ -140,7 +140,7 @@ async def confirm_delete_couple(callback: CallbackQuery):
     if len(tokens) >= 5:
         husband_id = int(tokens[-2])
         wife_id = int(tokens[-1])
-        success, msg = await req.delete_marriage(husband_id, wife_id)
+        msg = await req.delete_marriage(husband_id, wife_id)
         await callback.message.answer(msg)
         await callback.answer()
     else:
@@ -153,7 +153,7 @@ async def confirm_delete_relation(callback: CallbackQuery):
     if len(tokens) >= 5:
         parent_id = int(tokens[-2])
         child_id = int(tokens[-1])
-        success, msg = await req.delete_relationship(parent_id, child_id)
+        msg = await req.delete_relationship(parent_id, child_id)
         await callback.message.answer(msg)
         await callback.answer()
     else:
