@@ -2,7 +2,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, CheckConstraint
 
-from config import DATABASE_URL, SCHEMA
+from config import DATABASE_URL
 
 
 def get_engine(schema: str):
@@ -11,8 +11,10 @@ def get_engine(schema: str):
         connect_args={"server_settings": {"search_path": schema}})
 
 
+SCHEMA = "family"
+
 if SCHEMA is None or SCHEMA == '':
-    engine = get_engine('family')
+    engine = get_engine('public')
 else:
     engine = get_engine(SCHEMA)
 async_session = async_sessionmaker(engine)
