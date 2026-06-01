@@ -83,7 +83,7 @@ jobs:
             docker load -i ~/deploy/image_pmb.tar
             docker stop adminbot || true
             docker rm adminbot || true
-            docker run -d --name adminbot \
+            docker run -d --name adminbot --restart unless-stopped \
               -e TG_TOKEN="${{ secrets.TG_TOKEN }}" \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               -e SSH_HOST="${{ secrets.DEPLOY_SERVER_HOST }}" \
